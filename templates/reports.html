@@ -53,7 +53,7 @@
                     <a href="/reports/{{ report.safe_id }}">{{ report.filename }}</a>
                 </td>
                 <td><span class="badge badge-info">{{ report.type }}</span></td>
-                <td><small style="color: #7f8c8d;">{{ report.folder }}</small></td>
+                <td><small class="text-secondary">{{ report.folder }}</small></td>
                 <td>{{ report.modified.strftime('%Y-%m-%d %H:%M') }}</td>
                 <td>{{ (report.size / 1024) | round(1) }} KB</td>
                 {% if query %}
@@ -65,7 +65,7 @@
                     {% elif report.match_type == 'content' %}
                         <span class="badge badge-warning">Content</span>
                         {% if report.snippet %}
-                        <br><small style="color: #7f8c8d;">{{ report.snippet }}</small>
+                        <br><small class="text-secondary">{{ report.snippet }}</small>
                         {% endif %}
                     {% endif %}
                 </td>

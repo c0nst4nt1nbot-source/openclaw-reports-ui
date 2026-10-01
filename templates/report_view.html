@@ -3,14 +3,15 @@
 {% block title %}{{ title }} - OpenClaw Reports UI{% endblock %}
 
 {% block content %}
+<div class="reading-column">
 <div style="margin-bottom: 1rem;">
     <a href="/reports">← Back to Reports</a>
 </div>
 
 <div class="card">
-    <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #ecf0f1;">
+    <div class="report-header">
         <h2 style="margin-bottom: 0.5rem;">{{ title }}</h2>
-        <div style="display: flex; gap: 1rem; flex-wrap: wrap; color: #7f8c8d; font-size: 0.9rem;">
+        <div class="report-meta">
             <span>📁 {{ report.folder }}</span>
             <span>📅 {{ report.modified.strftime('%Y-%m-%d %H:%M') }}</span>
             <span>📊 {{ (report.size / 1024) | round(1) }} KB</span>
@@ -47,5 +48,6 @@
             <td>{{ report.size }} bytes ({{ (report.size / 1024) | round(2) }} KB)</td>
         </tr>
     </table>
+</div>
 </div>
 {% endblock %}
