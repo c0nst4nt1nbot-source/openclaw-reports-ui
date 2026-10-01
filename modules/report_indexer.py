@@ -82,13 +82,15 @@ class ReportIndexer:
     
     def read_content(self, file_path: str) -> str:
         """Read markdown content from file"""
-        if file_path in self._content_cache:
-            return self._content_cache[file_path]
-        
         try:
+            mtime = os.stat(file_path).st_mtime
+            cached = self._content_cache.get(file_path)
+            if cached and cached[0] == mtime:
+                return cached[1]
+
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
-                self._content_cache[file_path] = content
+                self._content_cache[file_path] = (mtime, content)
                 return content
         except Exception as e:
             return f"Error reading file: {e}"

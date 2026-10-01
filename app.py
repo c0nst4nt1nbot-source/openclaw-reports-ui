@@ -14,6 +14,8 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-change-me')
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
+MAX_PER_PAGE = 500
+
 # Initialize modules
 indexer = ReportIndexer()
 renderer = MarkdownRenderer()
@@ -80,7 +82,7 @@ def view_report(safe_id):
     
     # Read and render content
     content = indexer.read_content(report['path'])
-    html_content = renderer.render(content)
+    html_content = renderer.render(content, strip_title=True)
     title = renderer.extract_title(content)
     
     return render_template('report_view.html',
@@ -120,8 +122,8 @@ def database():
 def view_table(table_name):
     """View table contents with pagination"""
     # Get pagination parameters
-    page = int(request.args.get('page', 1))
-    per_page = int(request.args.get('per_page', 50))
+    page = max(1, request.args.get('page', 1, type=int))
+    per_page = min(max(1, request.args.get('per_page', 50, type=int)), MAX_PER_PAGE)
     offset = (page - 1) * per_page
     
     # Get filter parameters
