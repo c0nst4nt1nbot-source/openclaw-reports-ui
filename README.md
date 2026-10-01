@@ -135,11 +135,35 @@ Only `SELECT` is permitted. The console rejects multi-statement input and blocks
   interpolation; they are never taken from raw user input.
 - **Parameterized filters** — filter values are bound, never interpolated.
 - **SELECT-only console** — statement and keyword validation as above.
-- **Localhost by default** — `HOST` defaults to `127.0.0.1`.
+- **Loopback by default** — `HOST` defaults to `127.0.0.1`, so the app is not
+  reachable from other machines unless you explicitly opt in.
 
-For remote access, put it behind a reverse proxy or overlay network (the original
-deployment uses Tailscale Serve) rather than binding it publicly. There is **no
-authentication layer** in this app — do not expose it to an untrusted network.
+There is **no authentication layer** in this app. Every route is anonymous, and
+the SQL console is readable by anyone who can reach the port (it is read-only and
+SELECT-only, but it can read your entire database). Choose the bind address with
+that in mind:
+
+| `HOST` | Reachable from | Use when |
+| --- | --- | --- |
+| `127.0.0.1` *(default)* | This machine only | Local browsing, or a reverse proxy / overlay network on the same host |
+| `0.0.0.0` | Anything that can route to the port — your LAN, etc. | You accept unauthenticated access from the local network |
+
+**Recommended pattern:** keep `HOST=127.0.0.1` and put the app behind an
+overlay network or authenticated reverse proxy. The original deployment binds
+loopback and exposes it tailnet-only via Tailscale Serve:
+
+```bash
+# Serve the loopback-bound app to your tailnet, never to the public internet
+tailscale serve --bg --https=8443 http://127.0.0.1:8000
+```
+
+This gives you remote access without binding the port to every interface. Note
+that `tailscale serve` is tailnet-only by default — only `tailscale funnel`
+exposes a service publicly, which you should not use for this app as-is.
+
+If you do bind `0.0.0.0`, scope it with a host firewall rule for your subnet and
+be aware that the port is unauthenticated. Binding `0.0.0.0` is a deliberate
+tradeoff, not a neutral default.
 
 ## Project layout
 
@@ -176,6 +200,11 @@ original intelligence database it was built against contains:
 
 ## Deployment (systemd user unit)
 
+The unit sets every path and bind option explicitly. This matters: if `HOST` is
+omitted, the app falls back to its `127.0.0.1` default and silently loses any LAN
+access you thought you had — the setting is not inherited from whatever shell you
+last tested in.
+
 ```ini
 [Unit]
 Description=OpenClaw Reports UI - Web Interface
@@ -186,6 +215,9 @@ Type=simple
 WorkingDirectory=%h/openclaw-reports-ui
 Environment=OPENCLAW_REPORTS_DIR=%h/reports
 Environment=OPENCLAW_DB_PATH=%h/reports/intelligence.db
+# Loopback + Tailscale Serve (recommended): leave as-is. See "Security model"
+# above before changing this to 0.0.0.0, which exposes an unauthenticated app
+# to your LAN.
 Environment=HOST=127.0.0.1
 Environment=PORT=8000
 ExecStart=%h/openclaw-reports-ui/venv/bin/python app.py
@@ -210,7 +242,9 @@ systemctl --user enable --now openclaw-reports-ui.service
 - **Index lives in memory** and is rebuilt on each request rather than persisted.
 - **No tests, no CI, no linter config** yet — this would be the most valuable
   first contribution.
-- **No authentication** (intentional for the original localhost deployment).
+- **No authentication** — every route is anonymous. This is a deliberate
+  consequence of the original loopback-or-tailnet deployment; if you bind to a
+  shared network, everything is readable by anyone who can reach the port.
 - **Unbounded `per_page` / page params** on `/database/<table>` are read straight
   from query args without clamps.
 - **Content cache never evicts**, which matters for large report trees.
