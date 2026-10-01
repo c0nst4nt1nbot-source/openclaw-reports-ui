@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}{{ table_name }} - Database Explorer{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1rem;">
+    <a href="/database">← Back to Database</a>
+</div>
+
+<div class="card">
+    <h2>{{ table_name }}
+        {% if table_info.is_view %}
+        <span class="badge badge-info">View</span>
+        {% else %}
+        <span class="badge badge-success">Table</span>
+        {% endif %}
+    </h2>
+    <p>Total rows: {{ total }} | Showing {{ rows | length }} rows (page {{ page }} of {{ total_pages }})</p>
+</div>
+
+<div class="card">
+    <h3>Table Schema</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Column</th>
+                <th>Type</th>
+                <th>Constraints</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for col in table_info.columns %}
+            <tr>
+                <td><code>{{ col.name }}</code></td>
+                <td>{{ col.type }}</td>
+                <td>
+                    {% if col.pk %}<span class="badge badge-danger">PK</span>{% endif %}
+                    {% if col.notnull %}<span class="badge badge-warning">NOT NULL</span>{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if rows %}
+<div class="card">
+    <h3>Data (Page {{ page }} / {{ total_pages }})</h3>
+    
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    {% for col in table_info.columns %}
+                    <th>{{ col.name }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr>
+                    {% for col in table_info.columns %}
+                    <td>
+                        {% set value = row[col.name] %}
+                        {% if value is none %}
+                        <em style="color: #bbb;">NULL</em>
+                        {% elif value is string and value | length > 100 %}
+                        {{ value[:100] }}...
+                        {% else %}
+                        {{ value }}
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if total_pages > 1 %}
+<div class="pagination">
+    {% if page > 1 %}
+    <a href="?page=1&per_page={{ per_page }}">« First</a>
+    <a href="?page={{ page - 1 }}&per_page={{ per_page }}">‹ Prev</a>
+    {% endif %}
+    
+    {% for p in range([1, page - 2] | max, [total_pages, page + 2] | min + 1) %}
+        {% if p == page %}
+        <span class="active">{{ p }}</span>
+        {% else %}
+        <a href="?page={{ p }}&per_page={{ per_page }}">{{ p }}</a>
+        {% endif %}
+    {% endfor %}
+    
+    {% if page < total_pages %}
+    <a href="?page={{ page + 1 }}&per_page={{ per_page }}">Next ›</a>
+    <a href="?page={{ total_pages }}&per_page={{ per_page }}">Last »</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="card">
+    <p>No data in this table.</p>
+</div>
+{% endif %}
+
+<div class="card">
+    <h3>Options</h3>
+    <form method="get" style="margin-top: 1rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem;">
+            <div class="form-group" style="margin: 0;">
+                <label>Rows per page</label>
+                <select name="per_page">
+                    <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
+                    <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+                    <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+                    <option value="200" {% if per_page == 200 %}selected{% endif %}>200</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin: 0;">
+                <label>Page</label>
+                <input type="number" name="page" value="{{ page }}" min="1" max="{{ total_pages }}">
+            </div>
+            <div style="align-self: flex-end;">
+                <button type="submit">Go</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

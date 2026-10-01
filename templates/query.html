@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}SQL Query - Database Explorer{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1rem;">
+    <a href="/database">← Back to Database</a>
+</div>
+
+<div class="card">
+    <h2>SQL Query Interface</h2>
+    <div class="alert alert-info">
+        <strong>Security:</strong> Only SELECT queries are permitted. No write operations allowed.
+    </div>
+</div>
+
+<div class="card">
+    <h3>Execute Query</h3>
+    <form method="post">
+        <div class="form-group">
+            <label>SQL Query</label>
+            <textarea name="query" placeholder="SELECT * FROM reports LIMIT 10;">{{ query or '' }}</textarea>
+        </div>
+        <button type="submit">Execute Query</button>
+    </form>
+</div>
+
+{% if error %}
+<div class="card">
+    <div class="alert alert-error">
+        <strong>Error:</strong> {{ error }}
+    </div>
+</div>
+{% endif %}
+
+{% if results %}
+<div class="card">
+    <h3>Query Results ({{ results | length }} rows)</h3>
+    
+    {% if results | length > 0 %}
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    {% for key in results[0].keys() %}
+                    <th>{{ key }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in results %}
+                <tr>
+                    {% for key, value in row.items() %}
+                    <td>
+                        {% if value is none %}
+                        <em style="color: #bbb;">NULL</em>
+                        {% elif value is string and value | length > 200 %}
+                        {{ value[:200] }}...
+                        {% else %}
+                        {{ value }}
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p>Query executed successfully. No results returned.</p>
+    {% endif %}
+</div>
+{% endif %}
+
+<div class="card">
+    <h3>Example Queries</h3>
+    <div style="display: grid; gap: 1rem;">
+        <div>
+            <strong>List all reports:</strong>
+            <pre>SELECT report_date, report_type, country, risk_score 
+FROM reports 
+ORDER BY report_date DESC 
+LIMIT 20;</pre>
+        </div>
+        
+        <div>
+            <strong>High-risk reports:</strong>
+            <pre>SELECT report_date, country, risk_score, volatility_score 
+FROM reports 
+WHERE risk_score > 70 
+ORDER BY risk_score DESC;</pre>
+        </div>
+        
+        <div>
+            <strong>Entity mentions:</strong>
+            <pre>SELECT e.name, e.type, COUNT(*) as mention_count 
+FROM entities e 
+JOIN entity_mentions em ON e.id = em.entity_id 
+GROUP BY e.name, e.type 
+ORDER BY mention_count DESC 
+LIMIT 20;</pre>
+        </div>
+        
+        <div>
+            <strong>Country risk trend (view):</strong>
+            <pre>SELECT * FROM v_country_risk_trend ORDER BY avg_risk DESC;</pre>
+        </div>
+        
+        <div>
+            <strong>Recent signals:</strong>
+            <pre>SELECT category, subcategory, COUNT(*) as count 
+FROM signals 
+GROUP BY category, subcategory 
+ORDER BY count DESC;</pre>
+        </div>
+    </div>
+</div>
+{% endblock %}

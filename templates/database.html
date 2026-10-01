@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Database Explorer - OpenClaw Reports UI{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Intelligence Database Explorer</h2>
+    <p>Read-only access to the structured intelligence database. SELECT queries only.</p>
+</div>
+
+<h3 style="margin-bottom: 1rem;">Database Statistics</h3>
+<div class="stats-grid">
+    <div class="stat-box">
+        <span class="number">{{ db_stats.size_mb or 0 }}</span>
+        <span class="label">Database Size (MB)</span>
+    </div>
+    <div class="stat-box">
+        <span class="number">{{ db_stats.tables or 0 }}</span>
+        <span class="label">Tables</span>
+    </div>
+    <div class="stat-box">
+        <span class="number">{{ db_stats.views or 0 }}</span>
+        <span class="label">Views</span>
+    </div>
+    <div class="stat-box">
+        <span class="number">{{ db_stats.total_rows or 0 }}</span>
+        <span class="label">Total Records</span>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Tables & Views</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Rows</th>
+                <th>Columns</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for table in tables %}
+            <tr>
+                <td><strong>{{ table.name }}</strong></td>
+                <td>
+                    {% if table.is_view %}
+                    <span class="badge badge-info">View</span>
+                    {% else %}
+                    <span class="badge badge-success">Table</span>
+                    {% endif %}
+                </td>
+                <td>{{ table.row_count }}</td>
+                <td>{{ table.columns | length }}</td>
+                <td><a href="/database/{{ table.name }}" class="btn" style="padding: 0.5rem 1rem;">View Data →</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if db_stats.table_stats %}
+<div class="card">
+    <h3>Table Details</h3>
+    {% for table_name, stats in db_stats.table_stats.items() %}
+    <div style="margin-bottom: 1rem;">
+        <strong>{{ table_name }}</strong>
+        {% if stats.is_view %}
+        <span class="badge badge-info">View</span>
+        {% else %}
+        <span class="badge badge-success">Table</span>
+        {% endif %}
+        - {{ stats.rows }} rows, {{ stats.columns }} columns
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="card">
+    <h3>Quick Actions</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <a href="/database/query" class="btn">Run SQL Query</a>
+        <a href="/database/reports" class="btn btn-secondary">View Reports Table</a>
+        <a href="/database/entities" class="btn btn-secondary">View Entities Table</a>
+    </div>
+</div>
+{% endblock %}

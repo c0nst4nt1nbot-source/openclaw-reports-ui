@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - OpenClaw Reports UI{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1rem;">
+    <a href="/reports">← Back to Reports</a>
+</div>
+
+<div class="card">
+    <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #ecf0f1;">
+        <h2 style="margin-bottom: 0.5rem;">{{ title }}</h2>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; color: #7f8c8d; font-size: 0.9rem;">
+            <span>📁 {{ report.folder }}</span>
+            <span>📅 {{ report.modified.strftime('%Y-%m-%d %H:%M') }}</span>
+            <span>📊 {{ (report.size / 1024) | round(1) }} KB</span>
+            <span class="badge badge-info">{{ report.type }}</span>
+        </div>
+    </div>
+    
+    <div class="markdown-content">
+        {{ content | safe }}
+    </div>
+</div>
+
+<div class="card">
+    <h3>Report Details</h3>
+    <table>
+        <tr>
+            <th style="width: 200px;">Filename</th>
+            <td>{{ report.filename }}</td>
+        </tr>
+        <tr>
+            <th>Full Path</th>
+            <td><code>{{ report.path }}</code></td>
+        </tr>
+        <tr>
+            <th>Type</th>
+            <td>{{ report.type }}</td>
+        </tr>
+        <tr>
+            <th>Modified</th>
+            <td>{{ report.modified.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+        </tr>
+        <tr>
+            <th>Size</th>
+            <td>{{ report.size }} bytes ({{ (report.size / 1024) | round(2) }} KB)</td>
+        </tr>
+    </table>
+</div>
+{% endblock %}

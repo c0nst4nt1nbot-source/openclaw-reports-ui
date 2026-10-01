@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - OpenClaw Reports UI{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Intelligence Reports</h2>
+    
+    <form method="get" style="margin-top: 1rem;">
+        <div style="display: grid; grid-template-columns: 1fr 200px auto; gap: 1rem;">
+            <div class="form-group" style="margin: 0;">
+                <input type="search" name="q" placeholder="Search reports..." value="{{ query or '' }}">
+            </div>
+            <div class="form-group" style="margin: 0;">
+                <select name="type">
+                    <option value="">All Types</option>
+                    {% for type in all_types %}
+                    <option value="{{ type }}" {% if type == report_type %}selected{% endif %}>{{ type }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <button type="submit">Search</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+{% if query %}
+<div class="card">
+    <p><strong>Search results for:</strong> "{{ query }}"{% if report_type %} (Type: {{ report_type }}){% endif %}</p>
+    <p>Found {{ reports | length }} report(s)</p>
+</div>
+{% endif %}
+
+{% if reports %}
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Report</th>
+                <th>Type</th>
+                <th>Folder</th>
+                <th>Modified</th>
+                <th>Size</th>
+                {% if query %}<th>Match</th>{% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for report in reports %}
+            <tr>
+                <td>
+                    <a href="/reports/{{ report.safe_id }}">{{ report.filename }}</a>
+                </td>
+                <td><span class="badge badge-info">{{ report.type }}</span></td>
+                <td><small style="color: #7f8c8d;">{{ report.folder }}</small></td>
+                <td>{{ report.modified.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>{{ (report.size / 1024) | round(1) }} KB</td>
+                {% if query %}
+                <td>
+                    {% if report.match_type == 'filename' %}
+                        <span class="badge badge-success">Filename</span>
+                    {% elif report.match_type == 'path' %}
+                        <span class="badge badge-info">Path</span>
+                    {% elif report.match_type == 'content' %}
+                        <span class="badge badge-warning">Content</span>
+                        {% if report.snippet %}
+                        <br><small style="color: #7f8c8d;">{{ report.snippet }}</small>
+                        {% endif %}
+                    {% endif %}
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card">
+    <p>No reports found.</p>
+</div>
+{% endif %}
+
+<div class="card">
+    <p><small>
+        <a href="/api/reports/refresh">Refresh Index</a> | 
+        Total: {{ reports | length }} reports
+    </small></p>
+</div>
+{% endblock %}

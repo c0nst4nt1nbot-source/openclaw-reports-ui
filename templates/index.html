@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Home - OpenClaw Reports UI{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Dashboard Overview</h2>
+    <p>Welcome to the OpenClaw Intelligence Dashboard. This interface provides read-only access to intelligence reports and the structured database.</p>
+</div>
+
+<h3 style="margin-bottom: 1rem;">Report Statistics</h3>
+<div class="stats-grid">
+    <div class="stat-box">
+        <span class="number">{{ report_stats.total_reports or 0 }}</span>
+        <span class="label">Total Reports</span>
+    </div>
+    <div class="stat-box">
+        <span class="number">{{ report_stats.total_size_mb or 0 }}</span>
+        <span class="label">Total Size (MB)</span>
+    </div>
+    {% if report_stats.by_type %}
+    <div class="stat-box">
+        <span class="number">{{ report_stats.by_type | length }}</span>
+        <span class="label">Report Types</span>
+    </div>
+    {% endif %}
+</div>
+
+{% if report_stats.by_type %}
+<div class="card">
+    <h3>Reports by Type</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Count</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for type, count in report_stats.by_type.items() %}
+            <tr>
+                <td>{{ type }}</td>
+                <td>{{ count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<h3 style="margin-bottom: 1rem; margin-top: 2rem;">Database Statistics</h3>
+<div class="stats-grid">
+    <div class="stat-box">
+        <span class="number">{{ db_stats.size_mb or 0 }}</span>
+        <span class="label">Database Size (MB)</span>
+    </div>
+    <div class="stat-box">
+        <span class="number">{{ db_stats.tables or 0 }}</span>
+        <span class="label">Tables</span>
+    </div>
+    <div class="stat-box">
+        <span class="number">{{ db_stats.views or 0 }}</span>
+        <span class="label">Views</span>
+    </div>
+    <div class="stat-box">
+        <span class="number">{{ db_stats.total_rows or 0 }}</span>
+        <span class="label">Total Records</span>
+    </div>
+</div>
+
+{% if latest_reports %}
+<div class="card">
+    <h3>Latest Reports</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Report</th>
+                <th>Type</th>
+                <th>Modified</th>
+                <th>Size</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for report in latest_reports %}
+            <tr>
+                <td><a href="/reports/{{ report.safe_id }}">{{ report.filename }}</a></td>
+                <td><span class="badge badge-info">{{ report.type }}</span></td>
+                <td>{{ report.modified.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>{{ (report.size / 1024) | round(1) }} KB</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div style="margin-top: 1rem;">
+        <a href="/reports" class="btn">View All Reports →</a>
+    </div>
+</div>
+{% endif %}
+
+<div class="card">
+    <h3>Quick Links</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem;">
+        <a href="/reports" class="btn">Browse All Reports</a>
+        <a href="/database" class="btn btn-secondary">Explore Database</a>
+        <a href="/database/query" class="btn btn-secondary">Run SQL Query</a>
+    </div>
+</div>
+{% endblock %}
